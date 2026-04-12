@@ -35,6 +35,12 @@ Restart OpenCode. Works immediately with sensible defaults — no configuration 
 
 Windows support is planned for a future release.
 
+### macOS Notification Style
+
+Notifications appear as banners by default. macOS controls whether they show as dismissible banners or persistent alerts that stay until clicked — this is a system-level setting, not a plugin option.
+
+To change the style: **System Settings → Notifications → Script Editor** → set the alert style to "Alerts".
+
 ## Configuration
 
 A default config file is created automatically on first run at `~/.config/opencode/opencode-alert.json`. Edit it to customise:
@@ -53,8 +59,7 @@ A default config file is created automatically on first run at `~/.config/openco
   "notifyChildSessions": false,
   "terminal": null,
   "notifyOnIdle": true,
-  "suppressWhenFocused": true,
-  "persistentAlerts": false
+  "suppressWhenFocused": true
 }
 ```
 
@@ -71,7 +76,6 @@ A default config file is created automatically on first run at `~/.config/openco
 | `terminal` | string \| null | `null` | Override terminal detection (see below) |
 | `notifyOnIdle` | boolean | `true` | Notify when agent stops without requesting input |
 | `suppressWhenFocused` | boolean | `true` | Skip notifications when terminal is focused |
-| `persistentAlerts` | boolean | `false` | macOS: use modal dialogs that stay until dismissed |
 
 ### Terminal Detection
 

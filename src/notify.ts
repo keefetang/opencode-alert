@@ -10,8 +10,6 @@ export interface NotifyOptions {
   message: string;
   /** macOS sound name (e.g. "default", "Submarine", "Basso"). Ignored on Linux. */
   sound?: string;
-  /** When true on macOS, use `display alert` (modal dialog) instead of banner notification */
-  persistent?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -53,15 +51,6 @@ function notifyMacOS(opts: NotifyOptions): void {
   const title = escapeAppleScript(opts.title);
   const subtitle = opts.subtitle ? escapeAppleScript(opts.subtitle) : "";
   const msg = escapeAppleScript(opts.message);
-
-  if (opts.persistent) {
-    // display alert is a modal dialog — stays visible until the user dismisses it.
-    // It doesn't support subtitle or sound, so fold subtitle into the message body.
-    const alertMessage = subtitle ? `${subtitle}\n${msg}` : msg;
-    const script = `display alert "${title}" message "${alertMessage}" buttons {"OK"} default button "OK"`;
-    spawn("osascript", ["-e", script], { stdio: "ignore", detached: true }).unref();
-    return;
-  }
 
   const sound = opts.sound ?? "default";
   let script = `display notification "${msg}" with title "${title}"`;

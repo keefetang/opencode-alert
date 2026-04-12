@@ -28,8 +28,6 @@ export interface NotifyConfig {
   notifyOnIdle: boolean;
   /** When false, skip terminal focus detection and always send notifications */
   suppressWhenFocused: boolean;
-  /** On macOS, use `display alert` (modal dialog) instead of `display notification` (banner). Alerts do not play sounds. */
-  persistentAlerts: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -50,7 +48,6 @@ const DEFAULT_CONFIG: NotifyConfig = {
   terminal: null,
   notifyOnIdle: true,
   suppressWhenFocused: true,
-  persistentAlerts: false,
 };
 
 const CONFIG_PATH = join(homedir(), ".config", "opencode", "opencode-alert.json");
@@ -84,7 +81,6 @@ export function loadConfig(): NotifyConfig {
       terminal: typeof obj["terminal"] === "string" ? obj["terminal"] : DEFAULT_CONFIG.terminal,
       notifyOnIdle: typeof obj["notifyOnIdle"] === "boolean" ? obj["notifyOnIdle"] : DEFAULT_CONFIG.notifyOnIdle,
       suppressWhenFocused: typeof obj["suppressWhenFocused"] === "boolean" ? obj["suppressWhenFocused"] : DEFAULT_CONFIG.suppressWhenFocused,
-      persistentAlerts: typeof obj["persistentAlerts"] === "boolean" ? obj["persistentAlerts"] : DEFAULT_CONFIG.persistentAlerts,
     };
   } catch {
     return { ...DEFAULT_CONFIG };

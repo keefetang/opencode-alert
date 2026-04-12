@@ -5,7 +5,6 @@ import type { NotifyConfig } from "./config.js";
 import { detectTerminal, isTerminalFocused } from "./terminal.js";
 import type { TerminalInfo } from "./terminal.js";
 import { notify } from "./notify.js";
-import type { NotifyOptions } from "./notify.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,28 +106,6 @@ function shouldNotify(config: NotifyConfig, terminal: TerminalInfo | null): bool
 }
 
 // ---------------------------------------------------------------------------
-// Persistent alert stacking guard
-// ---------------------------------------------------------------------------
-
-let isShowingPersistentAlert = false;
-
-/**
- * Send a notification, guarding against stacked persistent dialogs.
- * Banner notifications (persistent: false) are always sent — they queue naturally.
- * Persistent alerts are gated: only one at a time, with a short cooldown.
- */
-function guardedNotify(opts: NotifyOptions): void {
-  if (opts.persistent && isShowingPersistentAlert) return;
-
-  notify(opts);
-
-  if (opts.persistent) {
-    isShowingPersistentAlert = true;
-    setTimeout(() => { isShowingPersistentAlert = false; }, 500);
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Event handler
 // ---------------------------------------------------------------------------
 
@@ -143,11 +120,10 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
 
       const info = await sessionTitle(client, directory, sessionID);
       if (!config.notifyChildSessions && info.isChild) return;
-      guardedNotify({
+      notify({
         title: "OpenCode — Completed",
         subtitle: `Session: ${info.title}`,
         message: "Ready for your input",
-        persistent: config.persistentAlerts,
       });
       return;
     }
@@ -160,12 +136,11 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
       if (!shouldNotify(config, terminal)) return;
 
       const info = await sessionTitle(client, directory, sessionID);
-      guardedNotify({
+      notify({
         title: "OpenCode — Permission Needed",
         subtitle: `Session: ${info.title}`,
         message: props.title || "Action requires your approval",
         sound: config.sounds.permission,
-        persistent: config.persistentAlerts,
       });
       return;
     }
@@ -180,12 +155,11 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
       const info = await sessionTitle(client, directory, sessionID);
       const rawMsg = error?.data && "message" in error.data ? error.data.message : undefined;
       const errorMsg = typeof rawMsg === "string" ? rawMsg : (error?.name ?? "An error occurred");
-      guardedNotify({
+      notify({
         title: "OpenCode — Error",
         subtitle: `Session: ${info.title}`,
         message: errorMsg,
         sound: config.sounds.error,
-        persistent: config.persistentAlerts,
       });
       return;
     }
@@ -199,11 +173,10 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
           if (!shouldNotify(config, terminal)) return;
 
           const info = await sessionTitle(client, directory, msg.sessionID);
-          guardedNotify({
+          notify({
             title: "OpenCode — Cancelled",
             subtitle: `Session: ${info.title}`,
             message: msg.error.data?.message ?? "Session was interrupted",
-            persistent: config.persistentAlerts,
           });
         }
       }
@@ -223,11 +196,10 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
         if (!shouldNotify(config, terminal)) return;
 
         const info = await sessionTitle(client, directory, part.sessionID);
-        guardedNotify({
+        notify({
           title: "OpenCode — Question",
           subtitle: `Session: ${info.title}`,
           message: "Needs your answer",
-          persistent: config.persistentAlerts,
         });
         return;
       }
@@ -240,11 +212,10 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
         const desc =
           (part.state as { input?: { description?: string } }).input?.description ??
           "Subagent task finished";
-        guardedNotify({
+        notify({
           title: "OpenCode — Subagent Done",
           subtitle: `Session: ${info.title}`,
           message: desc,
-          persistent: config.persistentAlerts,
         });
         return;
       }
@@ -267,7 +238,7 @@ export const OpenCodeAlertPlugin: Plugin = async (ctx) => {
     body: {
       service: "opencode-alert",
       level: "info",
-      message: `opencode-alert loaded (dir: ${directory}, terminal: ${terminal?.name ?? "unknown"}, quietHours: ${config.quietHours.enabled}, notifyOnIdle: ${config.notifyOnIdle}, suppressWhenFocused: ${config.suppressWhenFocused}, persistentAlerts: ${config.persistentAlerts})`,
+      message: `opencode-alert loaded (dir: ${directory}, terminal: ${terminal?.name ?? "unknown"}, quietHours: ${config.quietHours.enabled}, notifyOnIdle: ${config.notifyOnIdle}, suppressWhenFocused: ${config.suppressWhenFocused})`,
     },
   });
 
