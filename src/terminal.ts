@@ -135,24 +135,4 @@ function isFocusedLinux(terminal: TerminalInfo): boolean {
   return comm.toLowerCase() === terminal.processName.toLowerCase();
 }
 
-// ---------------------------------------------------------------------------
-// Focus terminal
-// ---------------------------------------------------------------------------
 
-/**
- * Bring the terminal emulator to the front.
- * No-op if the terminal or platform doesn't support it.
- */
-export function focusTerminal(terminal: TerminalInfo | null): void {
-  if (!terminal) return;
-
-  try {
-    if (platform === "darwin" && terminal.bundleId) {
-      execSync(`open -b "${terminal.bundleId}"`, { timeout: 2000, stdio: "ignore" });
-    } else if (platform === "linux" && terminal.processName) {
-      execSync(`wmctrl -a "${terminal.processName}"`, { timeout: 2000, stdio: "ignore" });
-    }
-  } catch {
-    // Silently ignore focus failures — non-critical
-  }
-}

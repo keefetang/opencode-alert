@@ -12,8 +12,15 @@ export interface QuietHours {
   end: string;   // "HH:MM"
 }
 
+/** Sound configuration. macOS only — sounds are played via afplay. No-op on other platforms. */
 export interface SoundConfig {
+  /** Sound for session idle / completed (default: Tink — subtle). Set to "" to disable. */
+  idle: string;
+  /** Sound for permission requests (default: Glass — attention-getting). Set to "" to disable. */
   permission: string;
+  /** Sound for questions needing your answer (default: Glass). Set to "" to disable. */
+  question: string;
+  /** Sound for errors (default: Basso — urgent). Set to "" to disable. */
   error: string;
 }
 
@@ -36,8 +43,10 @@ export interface NotifyConfig {
 
 const DEFAULT_CONFIG: NotifyConfig = {
   sounds: {
-    permission: "Submarine",
-    error: "Basso",
+    idle: "/System/Library/Sounds/Tink.aiff",
+    permission: "/System/Library/Sounds/Glass.aiff",
+    question: "/System/Library/Sounds/Glass.aiff",
+    error: "/System/Library/Sounds/Basso.aiff",
   },
   quietHours: {
     enabled: false,
@@ -126,7 +135,9 @@ function mergeSounds(raw: unknown): SoundConfig {
   if (typeof raw !== "object" || raw === null) return { ...DEFAULT_CONFIG.sounds };
   const obj = raw as Record<string, unknown>;
   return {
+    idle: typeof obj["idle"] === "string" ? obj["idle"] : DEFAULT_CONFIG.sounds.idle,
     permission: typeof obj["permission"] === "string" ? obj["permission"] : DEFAULT_CONFIG.sounds.permission,
+    question: typeof obj["question"] === "string" ? obj["question"] : DEFAULT_CONFIG.sounds.question,
     error: typeof obj["error"] === "string" ? obj["error"] : DEFAULT_CONFIG.sounds.error,
   };
 }

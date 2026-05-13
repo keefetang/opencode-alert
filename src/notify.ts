@@ -1,4 +1,5 @@
-import { spawn } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
+import { writeFileSync } from "node:fs";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -8,8 +9,52 @@ export interface NotifyOptions {
   title: string;
   subtitle?: string;
   message: string;
-  /** macOS sound name (e.g. "default", "Submarine", "Basso"). Ignored on Linux. */
+  /** macOS sound file path (default: /System/Library/Sounds/Glass.aiff). Set to "" to disable. */
   sound?: string;
+}
+
+// ---------------------------------------------------------------------------
+// TTY resolution — find the real terminal for OSC escape sequences
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve the destination TTY for OSC notifications.
+ *
+ * Inside tmux, stdout goes to a pseudo-terminal that tmux owns — OSC sequences
+ * written there are consumed by tmux, not the outer terminal. We need the
+ * tmux *client's* TTY (the real terminal connection) instead.
+ *
+ * Not cached — if the tmux client detaches and reattaches from a different
+ * terminal, the TTY path changes. The execSync cost (~2-5ms) is negligible
+ * since notifications fire at most every few seconds.
+ *
+ * Fallback chain: tmux client_tty → TTY env → tty command → /dev/stdout
+ */
+function getDestTty(): string {
+  try {
+    if (process.env["TMUX"]) {
+      const clientTty = execSync('tmux display-message -p "#{client_tty}"', {
+        encoding: "utf-8",
+        timeout: 2000,
+      }).trim();
+      if (clientTty) return clientTty;
+    }
+  } catch {
+    // tmux command failed — fall through
+  }
+
+  // Outside tmux: use TTY env var or tty command
+  const ttyEnv = process.env["TTY"];
+  if (ttyEnv) return ttyEnv;
+
+  try {
+    const ttyCmd = execSync("tty", { encoding: "utf-8", timeout: 2000 }).trim();
+    if (ttyCmd && !ttyCmd.includes("not a tty")) return ttyCmd;
+  } catch {
+    // tty command failed — fall through
+  }
+
+  return "/dev/stdout";
 }
 
 // ---------------------------------------------------------------------------
@@ -18,19 +63,21 @@ export interface NotifyOptions {
 
 const platform = process.platform;
 
+const DEFAULT_SOUND = "/System/Library/Sounds/Glass.aiff";
+
 /**
- * Send an OS notification. Fire-and-forget — never throws.
+ * Send a desktop notification. Fire-and-forget — never throws.
  *
- * - macOS: osascript `display notification`
- * - Linux: notify-send
- * - Other platforms: no-op (Windows support can be added later)
+ * - macOS/Linux with supported terminal: OSC 777 escape sequence + optional sound (macOS only)
+ * - Windows: no-op (support can be added later)
  */
 export function notify(opts: NotifyOptions): void {
   try {
     if (platform === "darwin") {
-      notifyMacOS(opts);
+      notifyOSC777(opts);
+      playSound(opts.sound);
     } else if (platform === "linux") {
-      notifyLinux(opts);
+      notifyOSC777(opts);
     }
     // Other platforms: silent no-op
   } catch {
@@ -39,38 +86,46 @@ export function notify(opts: NotifyOptions): void {
 }
 
 // ---------------------------------------------------------------------------
-// macOS — osascript
+// OSC 777 — works in Ghostty, WezTerm, foot, rxvt-unicode
 // ---------------------------------------------------------------------------
 
-/** Escape characters that would break AppleScript string literals. */
-function escapeAppleScript(s: string): string {
-  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+/** Strip characters that could break the OSC sequence. */
+function sanitizeOSC(s: string): string {
+  return s.replace(/[\x07\x1b\n\r]/g, " ");
 }
 
-function notifyMacOS(opts: NotifyOptions): void {
-  const title = escapeAppleScript(opts.title);
-  const subtitle = opts.subtitle ? escapeAppleScript(opts.subtitle) : "";
-  const msg = escapeAppleScript(opts.message);
+function notifyOSC777(opts: NotifyOptions): void {
+  const title = sanitizeOSC(opts.title);
+  const body = opts.subtitle
+    ? sanitizeOSC(`${opts.subtitle} — ${opts.message}`)
+    : sanitizeOSC(opts.message);
 
-  const sound = opts.sound ?? "default";
-  let script = `display notification "${msg}" with title "${title}"`;
-  if (subtitle) {
-    script += ` subtitle "${subtitle}"`;
+  const sequence = `\x1b]777;notify;${title};${body}\x07`;
+
+  try {
+    const destTty = getDestTty();
+    writeFileSync(destTty, sequence);
+  } catch {
+    // TTY write failed — notification silently dropped
   }
-  script += ` sound name "${escapeAppleScript(sound)}"`;
-
-  spawn("osascript", ["-e", script], { stdio: "ignore", detached: true }).unref();
 }
 
 // ---------------------------------------------------------------------------
-// Linux — notify-send
+// Sound — macOS only, via afplay
 // ---------------------------------------------------------------------------
 
-function notifyLinux(opts: NotifyOptions): void {
-  const titlePart = opts.subtitle
-    ? `${opts.title}: ${opts.subtitle}`
-    : opts.title;
+function playSound(sound: string | undefined): void {
+  // Explicit empty string = no sound
+  if (sound === "") return;
 
-  const args = [titlePart, opts.message, "-t", "5000"];
-  spawn("notify-send", args, { stdio: "ignore", detached: true }).unref();
+  const soundPath = sound ?? DEFAULT_SOUND;
+
+  try {
+    spawn("afplay", [soundPath], {
+      stdio: "ignore",
+      detached: true,
+    }).unref();
+  } catch {
+    // Sound playback failed — non-critical
+  }
 }

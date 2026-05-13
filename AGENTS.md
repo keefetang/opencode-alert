@@ -16,8 +16,8 @@ Entry point: `src/index.ts` exports `OpenCodeNotifyPlugin`.
 |------|---------|
 | `src/index.ts` | Plugin entry, event handler, session title cache, debounce |
 | `src/config.ts` | Config types, loadConfig(), isQuietHours() |
-| `src/terminal.ts` | Terminal detection, focus check (macOS/Linux), focusTerminal() |
-| `src/notify.ts` | Notification dispatch — macOS (osascript), Linux (notify-send) |
+| `src/terminal.ts` | Terminal detection, focus check (macOS/Linux) |
+| `src/notify.ts` | OSC 777 notification dispatch + macOS sound (afplay) |
 
 ## Events Handled
 

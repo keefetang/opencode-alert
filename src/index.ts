@@ -124,6 +124,7 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
         title: "OpenCode — Completed",
         subtitle: `Session: ${info.title}`,
         message: "Ready for your input",
+        sound: config.sounds.idle,
       });
       return;
     }
@@ -200,6 +201,7 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
           title: "OpenCode — Question",
           subtitle: `Session: ${info.title}`,
           message: "Needs your answer",
+          sound: config.sounds.question,
         });
         return;
       }
