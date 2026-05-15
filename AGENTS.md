@@ -6,9 +6,9 @@ An OpenCode plugin that sends native OS notifications when the agent needs atten
 
 ## Architecture
 
-Four source files. `index.ts` is the plugin entry point — loads config, wires the event handler, exports the plugin. `config.ts` handles config file loading, type-safe merging, and quiet hours logic. `terminal.ts` detects the terminal emulator and checks if it's focused. `notify.ts` dispatches notifications via platform-native commands.
+Four source files. `index.ts` is the plugin entry point — loads config, wires the event handler, exports the plugin. `config.ts` handles config file loading, type-safe merging, and quiet hours logic. `terminal.ts` detects the terminal emulator and checks if it's focused. `notify.ts` dispatches notifications via multi-protocol terminal escape sequences (OSC 777/9/99, Windows toast) with tmux passthrough support.
 
-Entry point: `src/index.ts` exports `OpenCodeNotifyPlugin`.
+Entry point: `src/index.ts` exports `OpenCodeAlertPlugin`.
 
 ## Source Files
 
@@ -17,7 +17,7 @@ Entry point: `src/index.ts` exports `OpenCodeNotifyPlugin`.
 | `src/index.ts` | Plugin entry, event handler, session title cache, debounce |
 | `src/config.ts` | Config types, loadConfig(), isQuietHours() |
 | `src/terminal.ts` | Terminal detection, focus check (macOS/Linux) |
-| `src/notify.ts` | OSC 777 notification dispatch + macOS sound (afplay) |
+| `src/notify.ts` | Multi-protocol notification dispatch (OSC 777/9/99, Windows toast, tmux passthrough) + sound |
 
 ## Events Handled
 

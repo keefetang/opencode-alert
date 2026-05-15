@@ -5,12 +5,17 @@ import { readFileSync } from "node:fs";
 // Types
 // ---------------------------------------------------------------------------
 
+/** Notification protocol supported by the terminal. null = no OSC support. */
+export type NotifyProtocol = "osc777" | "osc9" | "osc99" | "windows-toast";
+
 export interface TerminalInfo {
   name: string;
   /** macOS bundle identifier, if known */
   bundleId: string | null;
   /** Process name for Linux window matching */
   processName: string | null;
+  /** Notification protocol this terminal supports (informational — actual routing is env-var based) */
+  protocol: NotifyProtocol | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -18,14 +23,14 @@ export interface TerminalInfo {
 // ---------------------------------------------------------------------------
 
 const TERMINALS: Record<string, TerminalInfo> = {
-  ghostty: { name: "Ghostty", bundleId: "com.mitchellh.ghostty", processName: "ghostty" },
-  iterm2: { name: "iTerm2", bundleId: "com.googlecode.iterm2", processName: "iTerm2" },
-  wezterm: { name: "WezTerm", bundleId: "com.github.wez.wezterm", processName: "wezterm-gui" },
-  "apple-terminal": { name: "Terminal", bundleId: "com.apple.Terminal", processName: null },
-  kitty: { name: "Kitty", bundleId: "net.kovidgoyal.kitty", processName: "kitty" },
-  alacritty: { name: "Alacritty", bundleId: "org.alacritty", processName: "alacritty" },
-  hyper: { name: "Hyper", bundleId: "co.zeit.hyper", processName: "hyper" },
-  "windows-terminal": { name: "Windows Terminal", bundleId: null, processName: "WindowsTerminal" },
+  ghostty: { name: "Ghostty", bundleId: "com.mitchellh.ghostty", processName: "ghostty", protocol: "osc777" },
+  iterm2: { name: "iTerm2", bundleId: "com.googlecode.iterm2", processName: "iTerm2", protocol: "osc9" },
+  wezterm: { name: "WezTerm", bundleId: "com.github.wez.wezterm", processName: "wezterm-gui", protocol: "osc777" },
+  "apple-terminal": { name: "Terminal", bundleId: "com.apple.Terminal", processName: null, protocol: null },
+  kitty: { name: "Kitty", bundleId: "net.kovidgoyal.kitty", processName: "kitty", protocol: "osc99" },
+  alacritty: { name: "Alacritty", bundleId: "org.alacritty", processName: "alacritty", protocol: null },
+  hyper: { name: "Hyper", bundleId: "co.zeit.hyper", processName: "hyper", protocol: null },
+  "windows-terminal": { name: "Windows Terminal", bundleId: null, processName: "WindowsTerminal", protocol: "windows-toast" },
 };
 
 // ---------------------------------------------------------------------------
@@ -134,5 +139,3 @@ function isFocusedLinux(terminal: TerminalInfo): boolean {
 
   return comm.toLowerCase() === terminal.processName.toLowerCase();
 }
-
-

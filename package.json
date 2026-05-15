@@ -1,6 +1,6 @@
 {
   "name": "opencode-alert",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "OS notifications for OpenCode — alerts when your agent needs attention",
   "type": "module",
   "main": "src/index.ts",
@@ -17,7 +17,8 @@
     "opencode-plugin",
     "notifications",
     "macos",
-    "linux"
+    "linux",
+    "windows"
   ],
   "repository": {
     "type": "git",

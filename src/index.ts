@@ -4,7 +4,7 @@ import { loadConfig, isQuietHours } from "./config.js";
 import type { NotifyConfig } from "./config.js";
 import { detectTerminal, isTerminalFocused } from "./terminal.js";
 import type { TerminalInfo } from "./terminal.js";
-import { notify } from "./notify.js";
+import { notify, detectProtocol } from "./notify.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -110,6 +110,8 @@ function shouldNotify(config: NotifyConfig, terminal: TerminalInfo | null): bool
 // ---------------------------------------------------------------------------
 
 function createEventHandler(client: Client, directory: string, config: NotifyConfig, terminal: TerminalInfo | null): EventHandler {
+  const soundCommand = config.soundCommand;
+
   return async ({ event }) => {
     // ---- session.idle ----
     if (event.type === "session.idle") {
@@ -125,6 +127,7 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
         subtitle: `Session: ${info.title}`,
         message: "Ready for your input",
         sound: config.sounds.idle,
+        soundCommand,
       });
       return;
     }
@@ -142,6 +145,7 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
         subtitle: `Session: ${info.title}`,
         message: props.title || "Action requires your approval",
         sound: config.sounds.permission,
+        soundCommand,
       });
       return;
     }
@@ -161,6 +165,7 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
         subtitle: `Session: ${info.title}`,
         message: errorMsg,
         sound: config.sounds.error,
+        soundCommand,
       });
       return;
     }
@@ -178,6 +183,7 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
             title: "OpenCode — Cancelled",
             subtitle: `Session: ${info.title}`,
             message: msg.error.data?.message ?? "Session was interrupted",
+            soundCommand,
           });
         }
       }
@@ -202,6 +208,7 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
           subtitle: `Session: ${info.title}`,
           message: "Needs your answer",
           sound: config.sounds.question,
+          soundCommand,
         });
         return;
       }
@@ -218,6 +225,7 @@ function createEventHandler(client: Client, directory: string, config: NotifyCon
           title: "OpenCode — Subagent Done",
           subtitle: `Session: ${info.title}`,
           message: desc,
+          soundCommand,
         });
         return;
       }
@@ -233,14 +241,15 @@ export const OpenCodeAlertPlugin: Plugin = async (ctx) => {
   const { client, directory } = ctx;
   const config = loadConfig();
 
-  // Detect terminal once at init — it doesn't change during a session
+  // Detect terminal and notification protocol once at init — they don't change during a session
   const terminal = detectTerminal(config.terminal);
+  const protocol = detectProtocol();
 
   void client.app.log({
     body: {
       service: "opencode-alert",
       level: "info",
-      message: `opencode-alert loaded (dir: ${directory}, terminal: ${terminal?.name ?? "unknown"}, quietHours: ${config.quietHours.enabled}, notifyOnIdle: ${config.notifyOnIdle}, suppressWhenFocused: ${config.suppressWhenFocused})`,
+      message: `opencode-alert loaded (dir: ${directory}, terminal: ${terminal?.name ?? "unknown"}, protocol: ${protocol}, quietHours: ${config.quietHours.enabled}, notifyOnIdle: ${config.notifyOnIdle}, suppressWhenFocused: ${config.suppressWhenFocused})`,
     },
   });
 

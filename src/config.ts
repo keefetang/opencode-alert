@@ -35,6 +35,11 @@ export interface NotifyConfig {
   notifyOnIdle: boolean;
   /** When false, skip terminal focus detection and always send notifications */
   suppressWhenFocused: boolean;
+  /**
+   * Optional shell command to run alongside the built-in per-event sounds.
+   * Config file takes precedence over the OPENCODE_ALERT_SOUND_CMD env var.
+   */
+  soundCommand: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,6 +62,7 @@ const DEFAULT_CONFIG: NotifyConfig = {
   terminal: null,
   notifyOnIdle: true,
   suppressWhenFocused: true,
+  soundCommand: null,
 };
 
 const CONFIG_PATH = join(homedir(), ".config", "opencode", "opencode-alert.json");
@@ -90,6 +96,7 @@ export function loadConfig(): NotifyConfig {
       terminal: typeof obj["terminal"] === "string" ? obj["terminal"] : DEFAULT_CONFIG.terminal,
       notifyOnIdle: typeof obj["notifyOnIdle"] === "boolean" ? obj["notifyOnIdle"] : DEFAULT_CONFIG.notifyOnIdle,
       suppressWhenFocused: typeof obj["suppressWhenFocused"] === "boolean" ? obj["suppressWhenFocused"] : DEFAULT_CONFIG.suppressWhenFocused,
+      soundCommand: resolveSoundCommand(obj["soundCommand"]),
     };
   } catch {
     return { ...DEFAULT_CONFIG };
@@ -150,4 +157,11 @@ function mergeQuietHours(raw: unknown): QuietHours {
     start: typeof obj["start"] === "string" ? obj["start"] : DEFAULT_CONFIG.quietHours.start,
     end: typeof obj["end"] === "string" ? obj["end"] : DEFAULT_CONFIG.quietHours.end,
   };
+}
+
+/** Resolve soundCommand: config file takes precedence over env var. */
+function resolveSoundCommand(raw: unknown): string | null {
+  if (typeof raw === "string" && raw.trim()) return raw.trim();
+  const envCmd = process.env["OPENCODE_ALERT_SOUND_CMD"]?.trim();
+  return envCmd || null;
 }

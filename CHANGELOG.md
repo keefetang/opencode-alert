@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.3.0] - 2026-05-15
+
+### Added
+- **Multi-protocol notification dispatch** — routes to OSC 777 (Ghostty, WezTerm, foot, rxvt-unicode), OSC 9 (iTerm2), OSC 99 (Kitty), or Windows toast (Windows Terminal) based on auto-detected terminal
+- **tmux passthrough** — OSC sequences are wrapped in DCS passthrough when `$TMUX` is set, alongside existing client TTY resolution
+- **Kitty support** — OSC 99 with monotonic notification IDs for concurrent notifications
+- **iTerm2 support** — OSC 9 protocol, detected via `TERM_PROGRAM` or `ITERM_SESSION_ID`
+- **Windows Terminal support** — PowerShell toast notifications with injection-safe escaping
+- **`soundCommand` config option** — run a custom shell command alongside built-in sounds (any platform). Also available via `OPENCODE_ALERT_SOUND_CMD` env var
+- **`protocol` field on terminal database entries** — informational, indicates which notification protocol each terminal supports
+
+### Changed
+- Notification writes are now non-blocking — replaced `writeFileSync` with async `fs.open`/`write`/`close` callbacks
+- When no TTY path is resolved, notifications are dropped silently (never writes to stdout — OpenCode owns it)
+- Non-tmux TTY resolution is cached after first call — eliminates repeated `execSync("tty")` on every notification
+
+### Security
+- OSC sanitization now strips all C0/C1 control characters (0x00-0x1F, 0x7F-0x9F), including ST (0x9C) which terminates OSC in 8-bit terminal mode
+
+## [0.2.0] - 2026-05-13
+
+### Changed
+- Switched notifications from `osascript` to OSC 777 escape sequences — lighter weight, works inside tmux, no applescript dependency
+- Sound system changed from macOS sound names to full file paths (e.g. `/System/Library/Sounds/Glass.aiff`)
+- Per-event sound configuration: separate sound paths for idle, permission, question, and error events
+
 ## [0.1.1] - 2026-04-12
 
 ### Removed
