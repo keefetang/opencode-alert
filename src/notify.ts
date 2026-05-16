@@ -121,11 +121,11 @@ function getDestTty(): string | null {
 // ---------------------------------------------------------------------------
 
 /**
- * Wrap an OSC sequence in tmux DCS passthrough when running inside tmux.
+ * @internal Wrap an OSC sequence in tmux DCS passthrough when running inside tmux.
  * Escapes inner ESC bytes so the outer terminal receives them correctly.
  * Applied to all OSC protocols (777, 9, 99).
  */
-function wrapForTmux(sequence: string): string {
+export function wrapForTmux(sequence: string): string {
   if (!process.env["TMUX"]) return sequence;
   const escaped = sequence.split("\x1b").join("\x1b\x1b");
   return `\x1bPtmux;${escaped}\x1b\\`;
@@ -136,11 +136,11 @@ function wrapForTmux(sequence: string): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Strip characters that could break an OSC sequence or inject terminal commands.
+ * @internal Strip characters that could break an OSC sequence or inject terminal commands.
  * Covers all C0 control characters (0x00-0x1F), DEL (0x7F), and C1 control
  * characters (0x80-0x9F) — including ST (0x9C) which terminates OSC in 8-bit mode.
  */
-function sanitizeOSC(s: string): string {
+export function sanitizeOSC(s: string): string {
   return s.replace(/[\x00-\x1f\x7f-\x9f]/g, " ");
 }
 
@@ -148,11 +148,13 @@ function sanitizeOSC(s: string): string {
 // Protocol-specific formatters
 // ---------------------------------------------------------------------------
 
-function formatOSC777(title: string, body: string): string {
+/** @internal */
+export function formatOSC777(title: string, body: string): string {
   return `\x1b]777;notify;${title};${body}\x07`;
 }
 
-function formatOSC9(message: string): string {
+/** @internal */
+export function formatOSC9(message: string): string {
   return `\x1b]9;${message}\x07`;
 }
 
@@ -164,7 +166,8 @@ function formatOSC9(message: string): string {
  */
 let osc99Counter = 0;
 
-function formatOSC99(title: string, body: string): string {
+/** @internal */
+export function formatOSC99(title: string, body: string): string {
   const id = ++osc99Counter;
   const titlePart = `\x1b]99;i=${id}:d=0;${title}\x1b\\`;
   const bodyPart = `\x1b]99;i=${id}:p=body;${body}\x1b\\`;
@@ -195,12 +198,13 @@ function writeTtyAsync(ttyPath: string, data: string): void {
 // Windows toast notification
 // ---------------------------------------------------------------------------
 
-/** Escape single quotes for PowerShell single-quoted string literals. */
-function escapePowerShell(s: string): string {
+/** @internal Escape single quotes for PowerShell single-quoted string literals. */
+export function escapePowerShell(s: string): string {
   return s.replace(/'/g, "''");
 }
 
-function windowsToastScript(title: string, body: string): string {
+/** @internal */
+export function windowsToastScript(title: string, body: string): string {
   const safeTitle = escapePowerShell(title);
   const safeBody = escapePowerShell(body);
   const type = "Windows.UI.Notifications";

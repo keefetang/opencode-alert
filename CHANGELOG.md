@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.3.2] — 2026-05-16
+
+### Added
+- 79 tests across 3 files (config, terminal, notify)
+- CI and publish workflows now run `bun test`
+
+### Changed
+- Strict tsconfig (added `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, etc.)
+- Standardized .gitignore, switched lockfile from package-lock.json to bun.lock
+- AGENTS.md references shared plugin SDK doc
+
 ## [0.3.1] - 2026-05-16
 
 ### Changed

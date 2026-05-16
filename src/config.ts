@@ -107,8 +107,8 @@ export function loadConfig(): NotifyConfig {
 // Quiet hours
 // ---------------------------------------------------------------------------
 
-/** Parse "HH:MM" into minutes since midnight. Returns -1 on invalid input. */
-function parseTime(time: string): number {
+/** @internal Parse "HH:MM" into minutes since midnight. Returns -1 on invalid input. */
+export function parseTime(time: string): number {
   const parts = time.split(":");
   const h = parseInt(parts[0] ?? "", 10);
   const m = parseInt(parts[1] ?? "", 10);
@@ -116,15 +116,15 @@ function parseTime(time: string): number {
   return h * 60 + m;
 }
 
-export function isQuietHours(config: NotifyConfig): boolean {
+export function isQuietHours(config: NotifyConfig, /** @internal */ now?: Date): boolean {
   if (!config.quietHours.enabled) return false;
 
   const start = parseTime(config.quietHours.start);
   const end = parseTime(config.quietHours.end);
   if (start < 0 || end < 0) return false;
 
-  const now = new Date();
-  const current = now.getHours() * 60 + now.getMinutes();
+  const d = now ?? new Date();
+  const current = d.getHours() * 60 + d.getMinutes();
 
   // Overnight span: e.g. 22:00 - 08:00
   if (start > end) {
@@ -138,7 +138,8 @@ export function isQuietHours(config: NotifyConfig): boolean {
 // Merge helpers
 // ---------------------------------------------------------------------------
 
-function mergeSounds(raw: unknown): SoundConfig {
+/** @internal */
+export function mergeSounds(raw: unknown): SoundConfig {
   if (typeof raw !== "object" || raw === null) return { ...DEFAULT_CONFIG.sounds };
   const obj = raw as Record<string, unknown>;
   return {
@@ -149,7 +150,8 @@ function mergeSounds(raw: unknown): SoundConfig {
   };
 }
 
-function mergeQuietHours(raw: unknown): QuietHours {
+/** @internal */
+export function mergeQuietHours(raw: unknown): QuietHours {
   if (typeof raw !== "object" || raw === null) return { ...DEFAULT_CONFIG.quietHours };
   const obj = raw as Record<string, unknown>;
   return {
@@ -159,8 +161,8 @@ function mergeQuietHours(raw: unknown): QuietHours {
   };
 }
 
-/** Resolve soundCommand: config file takes precedence over env var. */
-function resolveSoundCommand(raw: unknown): string | null {
+/** @internal Resolve soundCommand: config file takes precedence over env var. */
+export function resolveSoundCommand(raw: unknown): string | null {
   if (typeof raw === "string" && raw.trim()) return raw.trim();
   const envCmd = process.env["OPENCODE_ALERT_SOUND_CMD"]?.trim();
   return envCmd || null;

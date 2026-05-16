@@ -43,4 +43,6 @@ Entry point: `src/index.ts` exports `OpenCodeAlertPlugin`.
 
 - **Always confirm with the user before pushing to remote.**
 - **Squash related commits before pushing** when possible.
-- **CI:** `tsc --noEmit` runs on every push to main and on PRs. Auto-publish to npm on version tags (`v*`).
+- **CI:** `tsc --noEmit` + `bun test` on every push to main and on PRs. Auto-publish to npm on version tags (`v*`).
+
+See `~/.config/opencode/context/opencode-plugins.md` for SDK reference and cross-plugin conventions.
