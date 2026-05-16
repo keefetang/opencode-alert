@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [0.3.1] - 2026-05-16
+
+### Changed
+- Updated `@opencode-ai/plugin` from ^1.4.3 to ^1.15.0
+- Updated `softprops/action-gh-release` from v2 to v3 (Node 24 runtime)
+- Updated `typescript` from 6.0.2 to 6.0.3
+- Updated `bun-types` from 1.3.12 to 1.3.14
+
 ## [0.3.0] - 2026-05-15
 
 ### Added
