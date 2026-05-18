@@ -60,6 +60,10 @@ export function detectTerminal(override?: string | null): TerminalInfo | null {
     if (termProgram.includes("hyper")) return TERMINALS["hyper"]!;
   }
 
+  // Ghostty sets GHOSTTY_RESOURCES_DIR even inside tmux (where TERM_PROGRAM
+  // gets overwritten to "tmux" after a server restart)
+  if (env["GHOSTTY_RESOURCES_DIR"]) return TERMINALS["ghostty"]!;
+
   // LC_TERMINAL (set by some terminals)
   const lcTerminal = env["LC_TERMINAL"]?.toLowerCase();
   if (lcTerminal) {

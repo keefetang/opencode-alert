@@ -1,6 +1,6 @@
 {
   "name": "opencode-alert",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "OS notifications for OpenCode — alerts when your agent needs attention",
   "type": "module",
   "main": "src/index.ts",

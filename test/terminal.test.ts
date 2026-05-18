@@ -8,6 +8,7 @@ import { detectTerminal } from "../src/terminal.js";
 
 const ENV_KEYS = [
   "TERM_PROGRAM",
+  "GHOSTTY_RESOURCES_DIR",
   "LC_TERMINAL",
   "KITTY_WINDOW_ID",
   "TERM",
@@ -124,6 +125,35 @@ describe("detectTerminal", () => {
     });
   });
 
+  // -- GHOSTTY_RESOURCES_DIR fallback (tmux case) -------------------------
+
+  describe("GHOSTTY_RESOURCES_DIR fallback", () => {
+    test("detects Ghostty when TERM_PROGRAM=tmux but GHOSTTY_RESOURCES_DIR is set", () => {
+      process.env["TERM_PROGRAM"] = "tmux";
+      process.env["GHOSTTY_RESOURCES_DIR"] = "/usr/share/ghostty";
+      const result = detectTerminal();
+      expect(result).not.toBeNull();
+      expect(result!.name).toBe("Ghostty");
+      expect(result!.protocol).toBe("osc777");
+    });
+
+    test("detects Ghostty via GHOSTTY_RESOURCES_DIR when no TERM_PROGRAM is set", () => {
+      process.env["GHOSTTY_RESOURCES_DIR"] = "/usr/share/ghostty";
+      const result = detectTerminal();
+      expect(result).not.toBeNull();
+      expect(result!.name).toBe("Ghostty");
+    });
+
+    test("TERM_PROGRAM=ghostty takes precedence over GHOSTTY_RESOURCES_DIR", () => {
+      process.env["TERM_PROGRAM"] = "ghostty";
+      process.env["GHOSTTY_RESOURCES_DIR"] = "/usr/share/ghostty";
+      const result = detectTerminal();
+      expect(result).not.toBeNull();
+      expect(result!.name).toBe("Ghostty");
+      // Both paths return Ghostty — but TERM_PROGRAM is checked first
+    });
+  });
+
   // -- LC_TERMINAL detection ---------------------------------------------
 
   describe("LC_TERMINAL detection", () => {
@@ -185,6 +215,13 @@ describe("detectTerminal", () => {
       process.env["KITTY_WINDOW_ID"] = "12345";
       const result = detectTerminal();
       expect(result!.name).toBe("Ghostty");
+    });
+
+    test("TERM_PROGRAM (non-ghostty) takes precedence over GHOSTTY_RESOURCES_DIR", () => {
+      process.env["TERM_PROGRAM"] = "WezTerm";
+      process.env["GHOSTTY_RESOURCES_DIR"] = "/usr/share/ghostty";
+      const result = detectTerminal();
+      expect(result!.name).toBe("WezTerm");
     });
 
     test("KITTY_WINDOW_ID takes precedence over TERM", () => {

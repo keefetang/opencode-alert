@@ -49,6 +49,9 @@ export function detectProtocol(): NotifyProtocol {
   } else if (env["TERM_PROGRAM"] === "iTerm.app" || env["ITERM_SESSION_ID"]) {
     cachedProtocol = "osc9";
   } else {
+    // Catch-all: osc777 covers Ghostty, WezTerm, foot, rxvt-unicode.
+    // This is correct even when TERM_PROGRAM=tmux (Ghostty inside tmux) —
+    // Ghostty uses osc777, so the fallback protocol matches by coincidence.
     cachedProtocol = "osc777";
   }
 
